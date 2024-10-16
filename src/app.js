@@ -1,41 +1,35 @@
 const express = require("express");
+const { user, admin } = require("./middlewares/auth");
 const app = express();
+exports.app = app;
 
-// Handle mutliple route in a single app.use and if want we can pass all the handlers inside a array like app.use("/route",[rh1,rh2,rh3]) or like app.use("/route",[rh1,rh2],rh3) both are right and give same result are normal way.
-app.use(
-	"/user",
-	(req, res, next) => {
-		const token = "abc";
-		if (token != "abc") res.status(404).send("Unauthorized request");
-		else next();
-	},
-	(req, res) => {
-		res.send("Server is saying hi from /user ");
-	}
-);
+//writing code middleware use for authentication as per industry standards for /user and /admin
+app.use("/user", user);
+// app.use("/admin", admin); commented this because there were two route which was admin/login and 2nd one was admin/getAllData so admin login don't need to be authenticated by /admin as it is a login page and there was only one route which need authentication which was /admin/getAllData so i have passed the middleware before the route handler in the callback chain of /admin/getAllData
 
-// handle multiple route separately with extended route with same prefix
-app.use("/hello", (req, res, next) => {
-	console.log("Authenticated");
-	next();
+// USER routes
+app.get("/user", (req, res) => {
+	res.send("Server is sending response from /user after being authenticated");
+});
+app.get("/user/details", (req, res) => {
+	res.send("Server is sending user details");
 });
 
-app.get("/hello/abc", (req, res) => {
-	res.send("Saying hi from /hello/abc"); //authenticated from /hello
+app.get("/user/random", (req, res) => {
+	res.send(
+		"Server is respondin to request of /user/random by authenticating user"
+	);
 });
 
-app.get("/hello/dbcd", (req, res) => {
-	res.send("Saying hllo from /hello/dbcd"); //authentiated from /hello
+//ADMIN  routes
+app.get("/admin/login", (req, res) => {
+	res.send(
+		"Server is veried the login details and redirected to the after login dashboard" //this handler is just for learning concept doesn't really useful as login call are post call. and this route wasn't authenticated.
+	);
 });
 
-//
-app.use("/profile", (req, res) => {
-	res.send("Server is responding from /profile");
-});
-
-app.use("/", (req, res) => {
-	// When we brought the '/' route at bottom of all the routes, the all routes returns response as expected.
-	res.send("Hello From /");
+app.get("/admin/getAllData", admin, (req, res) => {
+	res.send("Server is sending all data from /admin/getAllData");
 });
 
 app.listen(7777, () => {
