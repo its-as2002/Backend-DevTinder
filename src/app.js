@@ -1,7 +1,14 @@
 const express = require("express");
-require("./config/database");
+const { connectDB } = require("./config/database");
 const app = express();
 
-app.listen(7777, () => {
-	console.log("Server is listening");
-});
+connectDB()
+	.then((msg) => {
+		console.log(msg);
+		app.listen(7777, () => {
+			console.log("Server is listening");
+		});
+	})
+	.catch((err) => {
+		console.error("Database cannnot be connected ", err.message);
+	});

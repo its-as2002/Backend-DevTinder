@@ -1,29 +1,31 @@
 {
-  "name": "backend-devtinder",
-  "version": "1.0.0",
-  "description": "This is a backend microservice for Dev-Tinder.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/its-as2002/Backend-DevTinder.git"
-  },
-  "keywords": [
-    "Backend",
-    "Express",
-    "Node",
-    "MongoDb"
-  ],
-  "author": "Ayush Srivastava",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/its-as2002/Backend-DevTinder/issues"
-  },
-  "homepage": "https://github.com/its-as2002/Backend-DevTinder#readme",
-  "dependencies": {
-    "express": "^4.21.1",
-    "mongoose": "^8.7.2"
-  }
+	"name": "backend-devtinder",
+	"version": "1.0.0",
+	"description": "This is a backend microservice for Dev-Tinder.",
+	"main": "index.js",
+	"scripts": {
+		"start": "node src/app.js",
+		"dev": "nodemon src/app.js",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/its-as2002/Backend-DevTinder.git"
+	},
+	"keywords": [
+		"Backend",
+		"Express",
+		"Node",
+		"MongoDb"
+	],
+	"author": "Ayush Srivastava",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/its-as2002/Backend-DevTinder/issues"
+	},
+	"homepage": "https://github.com/its-as2002/Backend-DevTinder#readme",
+	"dependencies": {
+		"express": "^4.21.1",
+		"mongoose": "^8.7.2"
+	}
 }
