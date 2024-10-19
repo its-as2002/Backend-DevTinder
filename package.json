@@ -26,6 +26,7 @@
 	"homepage": "https://github.com/its-as2002/Backend-DevTinder#readme",
 	"dependencies": {
 		"express": "^4.21.1",
-		"mongoose": "^8.7.2"
+		"mongoose": "^8.7.2",
+		"validator": "^13.12.0"
 	}
 }
