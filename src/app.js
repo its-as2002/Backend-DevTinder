@@ -1,12 +1,16 @@
 const express = require("express");
 const { connectDB } = require("./config/database");
 const { User } = require("./model/user");
+const { validation } = require("./Utils/validation");
 const app = express();
 
 app.use(express.json()); // this middleware converts all the json object to the js object and passes to the request
+
+//SIGN UP
 app.post("/signUp", async (req, res) => {
 	try {
-		// throw new Error("Something went wrong");
+		//Perform data validations of req.body
+		validation(req);
 		const user = new User(req.body); // instance of User Model created
 		await user.save();
 		res.send("User added successfully");
@@ -15,6 +19,7 @@ app.post("/signUp", async (req, res) => {
 	}
 });
 
+//Get user detail by email
 app.get("/getUserByEmail", async (req, res) => {
 	try {
 		const user = await User.findOne(req.body);
@@ -26,6 +31,7 @@ app.get("/getUserByEmail", async (req, res) => {
 	}
 });
 
+//Get user email by ID
 app.get("/getUserById", async (req, res) => {
 	try {
 		const user = await User.findById(req.body);
@@ -37,6 +43,7 @@ app.get("/getUserById", async (req, res) => {
 	}
 });
 
+//Get all users for feed
 app.get("/feed", async (req, res) => {
 	try {
 		const users = await User.find({}); //get all users
@@ -46,6 +53,7 @@ app.get("/feed", async (req, res) => {
 	}
 });
 
+// Delete User
 app.delete("/user", async (req, res) => {
 	const idFilter = req.body;
 	try {
@@ -83,6 +91,12 @@ app.patch("/user/:userId", async (req, res) => {
 		res.send(user);
 	} catch (err) {
 		res.status(400).send(err.message);
+	}
+});
+
+app.use("/", (err, req, res, next) => {
+	if (err) {
+		res.status(err).send("Something went wrong");
 	}
 });
 
