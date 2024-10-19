@@ -2,6 +2,9 @@ const express = require("express");
 const { connectDB } = require("./config/database");
 const { User } = require("./model/user");
 const { validation } = require("./Utils/validation");
+const bcrypt = require("bcrypt");
+const validator = require("validator");
+
 const app = express();
 
 app.use(express.json()); // this middleware converts all the json object to the js object and passes to the request
@@ -11,11 +14,21 @@ app.post("/signUp", async (req, res) => {
 	try {
 		//Perform data validations of req.body
 		validation(req);
-		const user = new User(req.body); // instance of User Model created
+		//Encryption of password before storing in database
+		const { firstName, lastName, emailId, password } = req.body;
+		const passwordHash = bcrypt.hashSync(password, 10);
+		const userData = {
+			firstName,
+			lastName,
+			emailId,
+			password: passwordHash,
+		};
+
+		const user = new User(userData); // instance of User Model created
 		await user.save();
 		res.send("User added successfully");
 	} catch (err) {
-		res.status(400).send(err.message);
+		res.status(400).send("ERROR : " + err.message);
 	}
 });
 
@@ -57,7 +70,12 @@ app.get("/feed", async (req, res) => {
 app.delete("/user", async (req, res) => {
 	const idFilter = req.body;
 	try {
-		await User.findByIdAndDelete(idFilter);
+		const user = await User.findByIdAndDelete(idFilter);
+		if (!user)
+			throw new Error(
+				`No User found associated with userId : ${req.body?._id}`
+			);
+
 		res.send("User Deleted Successfully");
 	} catch (err) {
 		res.status(400).send(err.message);
