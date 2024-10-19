@@ -32,6 +32,28 @@ app.post("/signUp", async (req, res) => {
 	}
 });
 
+//Sign In
+app.post("/login", async (req, res) => {
+	try {
+		const { emailId, password } = req.body;
+		if (!validator.isEmail(emailId)) throw new Error("Invalid Credentials");
+
+		const user = await User.findOne({ emailId: emailId });
+
+		if (user === null)
+			return res.status(404).send("User not Found with associated emailId");
+		const passwordCheck = await bcrypt.compare(password, user.password);
+
+		passwordCheck
+			? res.send("User Logged In")
+			: (() => {
+					throw new Error("Invalid Credentials");
+			  })();
+	} catch (err) {
+		res.status(400).send(err.message);
+	}
+});
+
 //Get user detail by email
 app.get("/getUserByEmail", async (req, res) => {
 	try {
