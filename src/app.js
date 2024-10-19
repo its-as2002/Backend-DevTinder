@@ -53,12 +53,14 @@ app.delete("/user", async (req, res) => {
 		res.status(400).send(err.message);
 	}
 });
+
 //findOneAndUpdate
 app.patch("/user", async (req, res) => {
 	const filter = req.body.searchFilter;
 	const updateData = req.body.updateData;
 	const options = {
 		returnDocument: "after",
+		runValidators: true,
 	};
 	try {
 		const user = await User.findOneAndUpdate(filter, updateData, options);
@@ -69,13 +71,28 @@ app.patch("/user", async (req, res) => {
 });
 
 //findByIdAndUpdate
-app.patch("/userById", async (req, res) => {
-	const filter = { _id: req.body.userId };
+app.patch("/userById/:userId", async (req, res) => {
+	const filter = { _id: req.params.userId };
 	const updateData = req.body;
+
 	const options = {
 		returnDocument: "after",
+		runValidators: true,
 	};
 	try {
+		const ALLOWED_UPDATE = [
+			"firstName",
+			"lastName",
+			"photoURL",
+			"about",
+			"skills",
+			"gender",
+			"age",
+		];
+		const isAllowed = Object.keys(updateData).every((key) =>
+			ALLOWED_UPDATE.includes(key)
+		);
+		if (!isAllowed) throw new Error("Updates of fields not allowed");
 		const user = await User.findByIdAndUpdate(filter, updateData, options);
 		res.send(user);
 	} catch (err) {
