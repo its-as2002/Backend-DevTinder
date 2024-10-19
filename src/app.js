@@ -29,6 +29,8 @@ app.get("/getUserByEmail", async (req, res) => {
 app.get("/getUserById", async (req, res) => {
 	try {
 		const user = await User.findById(req.body);
+		if (user == null)
+			throw new Error(`No User found associated with userId ${req.body?._id}`);
 		res.send(user);
 	} catch (err) {
 		res.status(400).send(err.message);
@@ -54,24 +56,8 @@ app.delete("/user", async (req, res) => {
 	}
 });
 
-//findOneAndUpdate
-app.patch("/user", async (req, res) => {
-	const filter = req.body.searchFilter;
-	const updateData = req.body.updateData;
-	const options = {
-		returnDocument: "after",
-		runValidators: true,
-	};
-	try {
-		const user = await User.findOneAndUpdate(filter, updateData, options);
-		res.send(user);
-	} catch (err) {
-		res.status(400).send(err.message);
-	}
-});
-
 //findByIdAndUpdate
-app.patch("/userById/:userId", async (req, res) => {
+app.patch("/user/:userId", async (req, res) => {
 	const filter = { _id: req.params.userId };
 	const updateData = req.body;
 
