@@ -4,10 +4,12 @@ const { User } = require("./model/user");
 const { validation } = require("./Utils/validation");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
-
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 const app = express();
 
 app.use(express.json()); // this middleware converts all the json object to the js object and passes to the request
+app.use(cookieParser()); //
 
 //SIGN UP
 app.post("/signUp", async (req, res) => {
@@ -16,7 +18,7 @@ app.post("/signUp", async (req, res) => {
 		validation(req);
 		//Encryption of password before storing in database
 		const { firstName, lastName, emailId, password } = req.body;
-		const passwordHash = bcrypt.hashSync(password, 10);
+		const passwordHash = await bcrypt.hash(password, 10);
 		const userData = {
 			firstName,
 			lastName,
@@ -42,19 +44,32 @@ app.post("/login", async (req, res) => {
 
 		if (user === null)
 			return res.status(404).send("User not Found with associated emailId");
-		const passwordCheck = await bcrypt.compare(password, user.password);
+		const isPasswordValid = await bcrypt.compare(password, user.password);
 
-		passwordCheck
-			? res.send("User Logged In")
-			: (() => {
-					throw new Error("Invalid Credentials");
-			  })();
+		if (isPasswordValid) {
+			//token creation
+			const token = jwt.sign({ userId: user._id }, "SECRETKEY");
+			//attaching token to cookies
+			res.cookie("token", token);
+			res.end("User Logged in ");
+		} else throw new Error("Invalid Credential");
 	} catch (err) {
 		res.status(400).send(err.message);
 	}
 });
 
-//Get user detail by email
+app.get("/profile", async (req, res) => {
+	try {
+		const cookie = req.cookies;
+		const { token } = cookie;
+		const { userId } = jwt.verify(token, "SECRETKEY");
+		const user = await User.findById(userId);
+		res.send(user);
+	} catch (err) {
+		res.status(400).send("Error : " + err.message);
+	}
+});
+//Get user jwt.detail by email
 app.get("/getUserByEmail", async (req, res) => {
 	try {
 		const user = await User.findOne(req.body);
