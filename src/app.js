@@ -53,7 +53,9 @@ app.post("/login", async (req, res) => {
 				expiresIn: "1h", //jsw expires in 1 hour
 			});
 			//attaching token to cookies
-			res.cookie("loginToken", token);
+			res.cookie("loginToken", token, {
+				expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // cookie expires in 1 hour
+			});
 			res.end("User Logged in ");
 		} else throw new Error("Invalid Credential");
 	} catch (err) {
