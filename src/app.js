@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt");
 const validator = require("validator");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middlewares/auth");
 const app = express();
 
 app.use(express.json()); // this middleware converts all the json object to the js object and passes to the request
@@ -48,9 +49,9 @@ app.post("/login", async (req, res) => {
 
 		if (isPasswordValid) {
 			//token creation
-			const token = jwt.sign({ userId: user._id }, "SECRETKEY");
+			const token = jwt.sign({ userId: user._id }, "SECRbETKEY");
 			//attaching token to cookies
-			res.cookie("token", token);
+			res.cookie("loginToken", token);
 			res.end("User Logged in ");
 		} else throw new Error("Invalid Credential");
 	} catch (err) {
@@ -58,16 +59,18 @@ app.post("/login", async (req, res) => {
 	}
 });
 
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, (req, res) => {
 	try {
-		const cookie = req.cookies;
-		const { token } = cookie;
-		const { userId } = jwt.verify(token, "SECRETKEY");
-		const user = await User.findById(userId);
+		const user = req.user;
 		res.send(user);
 	} catch (err) {
 		res.status(400).send("Error : " + err.message);
 	}
+});
+
+app.get("/sendConnectionRequest", userAuth, (req, res) => {
+	if (!req.user) throw new Error("User not found");
+	res.send("User found : " + req.user);
 });
 //Get user jwt.detail by email
 app.get("/getUserByEmail", async (req, res) => {
@@ -82,9 +85,9 @@ app.get("/getUserByEmail", async (req, res) => {
 });
 
 //Get user email by ID
-app.get("/getUserById", async (req, res) => {
+app.get("/getUserById", userAuth, async (req, res) => {
 	try {
-		const user = await User.findById(req.body);
+		const user = req.user;
 		if (user == null)
 			throw new Error(`No User found associated with userId ${req.body?._id}`);
 		res.send(user);
@@ -94,7 +97,7 @@ app.get("/getUserById", async (req, res) => {
 });
 
 //Get all users for feed
-app.get("/feed", async (req, res) => {
+app.get("/feed", userAuth, async (req, res) => {
 	try {
 		const users = await User.find({}); //get all users
 		res.send(users);
@@ -104,8 +107,8 @@ app.get("/feed", async (req, res) => {
 });
 
 // Delete User
-app.delete("/user", async (req, res) => {
-	const idFilter = req.body;
+app.delete("/user", userAuth, async (req, res) => {
+	const idFilter = req.user._id;
 	try {
 		const user = await User.findByIdAndDelete(idFilter);
 		if (!user)
@@ -120,8 +123,8 @@ app.delete("/user", async (req, res) => {
 });
 
 //findByIdAndUpdate
-app.patch("/user/:userId", async (req, res) => {
-	const filter = { _id: req.params.userId };
+app.patch("/user/:userId", userAuth, async (req, res) => {
+	const filter = { _id: req.user._id };
 	const updateData = req.body;
 
 	const options = {
