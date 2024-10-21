@@ -49,7 +49,9 @@ app.post("/login", async (req, res) => {
 
 		if (isPasswordValid) {
 			//token creation
-			const token = jwt.sign({ userId: user._id }, "SECRbETKEY");
+			const token = jwt.sign({ userId: user._id }, "SECRbETKEY", {
+				expiresIn: "1h", //jsw expires in 1 hour
+			});
 			//attaching token to cookies
 			res.cookie("loginToken", token);
 			res.end("User Logged in ");
@@ -65,90 +67,6 @@ app.get("/profile", userAuth, (req, res) => {
 		res.send(user);
 	} catch (err) {
 		res.status(400).send("Error : " + err.message);
-	}
-});
-
-app.get("/sendConnectionRequest", userAuth, (req, res) => {
-	if (!req.user) throw new Error("User not found");
-	res.send("User found : " + req.user);
-});
-//Get user jwt.detail by email
-app.get("/getUserByEmail", async (req, res) => {
-	try {
-		const user = await User.findOne(req.body);
-		if (user === null)
-			return res.status(404).send("User not Found with associated emailId");
-		else res.send(user);
-	} catch (err) {
-		res.status(400).send(err.message);
-	}
-});
-
-//Get user email by ID
-app.get("/getUserById", userAuth, async (req, res) => {
-	try {
-		const user = req.user;
-		if (user == null)
-			throw new Error(`No User found associated with userId ${req.body?._id}`);
-		res.send(user);
-	} catch (err) {
-		res.status(400).send(err.message);
-	}
-});
-
-//Get all users for feed
-app.get("/feed", userAuth, async (req, res) => {
-	try {
-		const users = await User.find({}); //get all users
-		res.send(users);
-	} catch (err) {
-		res.status(400).send(err.message);
-	}
-});
-
-// Delete User
-app.delete("/user", userAuth, async (req, res) => {
-	const idFilter = req.user._id;
-	try {
-		const user = await User.findByIdAndDelete(idFilter);
-		if (!user)
-			throw new Error(
-				`No User found associated with userId : ${req.body?._id}`
-			);
-
-		res.send("User Deleted Successfully");
-	} catch (err) {
-		res.status(400).send(err.message);
-	}
-});
-
-//findByIdAndUpdate
-app.patch("/user/:userId", userAuth, async (req, res) => {
-	const filter = { _id: req.user._id };
-	const updateData = req.body;
-
-	const options = {
-		returnDocument: "after",
-		runValidators: true,
-	};
-	try {
-		const ALLOWED_UPDATE = [
-			"firstName",
-			"lastName",
-			"photoURL",
-			"about",
-			"skills",
-			"gender",
-			"age",
-		];
-		const isAllowed = Object.keys(updateData).every((key) =>
-			ALLOWED_UPDATE.includes(key)
-		);
-		if (!isAllowed) throw new Error("Updates of fields not allowed");
-		const user = await User.findByIdAndUpdate(filter, updateData, options);
-		res.send(user);
-	} catch (err) {
-		res.status(400).send(err.message);
 	}
 });
 
