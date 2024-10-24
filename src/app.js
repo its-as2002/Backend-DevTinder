@@ -5,7 +5,6 @@ const { validation } = require("./Utils/validation");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
 const { userAuth } = require("./middlewares/auth");
 const app = express();
 
@@ -45,13 +44,11 @@ app.post("/login", async (req, res) => {
 
 		if (user === null)
 			return res.status(404).send("User not Found with associated emailId");
-		const isPasswordValid = await bcrypt.compare(password, user.password);
+		const isPasswordValid = user.isPasswordValid(password);
 
 		if (isPasswordValid) {
 			//token creation
-			const token = jwt.sign({ userId: user._id }, "SECRbETKEY", {
-				expiresIn: "1h", //jsw expires in 1 hour
-			});
+			const token = user.getJWT();
 			//attaching token to cookies
 			res.cookie("loginToken", token, {
 				expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // cookie expires in 1 hour
@@ -88,3 +85,4 @@ connectDB()
 	.catch((err) => {
 		console.error("Database cannnot be connected ", err.message);
 	});
+
