@@ -10,4 +10,5 @@ const validation = (req) => {
 		throw new Error("Enter a Strong password");
 };
 
+
 module.exports = { validation };

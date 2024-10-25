@@ -85,4 +85,3 @@ userSchema.methods.isPasswordValid = async function (password) {
 
 const User = model("User", userSchema); // not be done using new keyword
 module.exports = { User };
-                                                                                                                                                                                                                                                                
