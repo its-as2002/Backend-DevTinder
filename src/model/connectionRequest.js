@@ -14,7 +14,7 @@ const connectionRequestSchema = new mongoose.Schema(
 		status: {
 			type: String,
 			required: true,
-            lowercase : true,
+			lowercase: true,
 			enum: {
 				values: ["accepted", "rejected", "ignored", "interested"],
 				message: `{VALUE} is invalid`,
@@ -25,6 +25,14 @@ const connectionRequestSchema = new mongoose.Schema(
 		timestamps: true,
 	}
 );
+
+//This Schema.pre is a middleware which will run before saving the file to database 
+connectionRequestSchema.pre("save", function (next) {
+	const connectionRequest = this;
+	if (connectionRequest.fromUserId.equals(connectionRequest.toUserId))
+		throw new Error("You cannot send a Connection request to yourself");
+	next();
+});
 
 const ConnectionRequest = mongoose.model(
 	"ConnectionRequest",
