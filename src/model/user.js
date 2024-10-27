@@ -10,12 +10,14 @@ const userSchema = new Schema(
 			required: true,
 			minLength: 3,
 			maxLength: 42,
+			trim: true,
 		},
 		lastName: {
 			type: String,
 			required: true,
 			minLength: 3,
 			maxLength: 42,
+			trim: true,
 		},
 		emailId: {
 			type: String,
@@ -43,9 +45,9 @@ const userSchema = new Schema(
 		gender: {
 			type: String,
 			lowercase: true,
-			validate(value) {
-				if (!["male", "female", "other"].includes(value))
-					throw new Error("Gender is not valid");
+			enum: {
+				values: ["male", "female", "other"],
+				message: "{VALUE} is not supported",
 			},
 		},
 		photoURL: {
@@ -84,4 +86,4 @@ userSchema.methods.isPasswordValid = async function (password) {
 };
 
 const User = model("User", userSchema); // not be done using new keyword
-module.exports = { User };
+module.exports =  User ;

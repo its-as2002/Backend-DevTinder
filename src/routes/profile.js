@@ -68,7 +68,7 @@ profileRouter.patch("/password", userAuth, async (req, res) => {
 		if (isValid) {
 			const newHash = await bcrypt.hash(newPassword, 10);
 			user["password"] = newHash;
-			await user.save();
+			await user.save({ validateBeforeSave: true });
 			res.send("Password Updated Successfully");
 		} else throw new Error("Old Password is Incorrect");
 	} catch (err) {

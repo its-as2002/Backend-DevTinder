@@ -16,6 +16,8 @@
 
 - POST /request/send/interested/:userId
 - POST /request/send/ignored/:userId
+# combining the above two api we can make one 
+- POST /request/send/
 - POST /request/send/accepted/:userId
 - POST /request/send/rejected/:userId
 
