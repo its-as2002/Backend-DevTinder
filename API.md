@@ -16,13 +16,16 @@
 
 - POST /request/send/interested/:userId
 - POST /request/send/ignored/:userId
-# combining the above two api we can make one 
-- POST /request/send/
-- POST /request/send/accepted/:userId
-- POST /request/send/rejected/:userId
+# combining the above two Api we can make one 
+- POST /request/send/:status/:userId
+---------------------------------------------
+- POST /request/view/accepted/:requestId
+- POST /request/view/rejected/:requestId
+# combining the above two Api we can make one
+- POST  /request/view/:status/:requestId
 
 ## userRouter
 
-- /user/Connections
+- /user/connections
 - /user/requests
-- /user/feed - Gets you the profile of another users
+- /user/feed 

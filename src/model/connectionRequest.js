@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { isLowercase } = require("validator");
 
 const connectionRequestSchema = new mongoose.Schema(
 	{
@@ -26,7 +25,9 @@ const connectionRequestSchema = new mongoose.Schema(
 	}
 );
 
-//This Schema.pre is a middleware which will run before saving the file to database 
+connectionRequestSchema.index({ fromUserId: 1, toUserId: -1 });
+connectionRequestSchema.index({ _id:1, toUserId:-1, status:1 });
+//This Schema.pre is a middleware which will run before saving the file to database
 connectionRequestSchema.pre("save", function (next) {
 	const connectionRequest = this;
 	if (connectionRequest.fromUserId.equals(connectionRequest.toUserId))
