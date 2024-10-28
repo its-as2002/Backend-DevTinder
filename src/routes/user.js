@@ -10,8 +10,9 @@ userRouter.get("/requests/recieved", userAuth, async (req, res) => {
 		const connectionRequest = await ConnectionRequest.find({
 			toUserId: loggedInUser._id,
 			status: "interested",
-		});
-		res.status(400).json({
+			// }).populate("fromUserId", "firstName lastName photoURL");
+		}).populate("fromUserId", ["firstName", "lastName", "photoURL"]);
+		res.status(200).json({
 			message: `Hey ${loggedInUser.firstName}!,You have got ${connectionRequest.length} pending requests`,
 			data: connectionRequest,
 		});
