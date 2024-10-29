@@ -1,6 +1,6 @@
 const express = require("express");
 const { userAuth } = require("../middlewares/auth");
-const ConnectionRequestModel = require("../model/connectionRequest");
+const ConnectionRequest = require("../model/connectionRequest");
 const User = require("../model/user");
 const mongoose = require("mongoose");
 
@@ -35,7 +35,7 @@ requestRouter.post("/send/:status/:toUserId", userAuth, async (req, res) => {
 
 		//check for duplicatie connection request from LoggedIn User
 		const checkExistingRequestFromLoggedInUser =
-			await ConnectionRequestModel.findOne({
+			await ConnectionRequest.findOne({
 				fromUserId,
 				toUserId,
 			});
@@ -58,11 +58,10 @@ requestRouter.post("/send/:status/:toUserId", userAuth, async (req, res) => {
 		}
 
 		//check that the connection request of other user already exists to whom the request is being sent by the loggedIn user.
-		const checkExistingRequestFromOtherUser =
-			await ConnectionRequestModel.findOne({
-				fromUserId: toUserId,
-				toUserId: fromUserId,
-			});
+		const checkExistingRequestFromOtherUser = await ConnectionRequest.findOne({
+			fromUserId: toUserId,
+			toUserId: fromUserId,
+		});
 		if (checkExistingRequestFromOtherUser)
 			if (checkExistingRequestFromOtherUser.status === "interested")
 				return res.status(500).json({
@@ -90,7 +89,7 @@ requestRouter.post("/send/:status/:toUserId", userAuth, async (req, res) => {
 			status,
 		};
 
-		const connectionRequest = new ConnectionRequestModel(connectionData);
+		const connectionRequest = new ConnectionRequest(connectionData);
 		const data = await connectionRequest.save();
 		res.json({
 			message: `Hey ${loggedInUser.firstName}! Your Connection request was successfully sent to ${toUser.firstName}`,
@@ -111,7 +110,7 @@ requestRouter.post("/view/:status/:requestId", userAuth, async (req, res) => {
 		if (!mongoose.Types.ObjectId.isValid(requestId))
 			return res.status(400).json({ message: "Invalid requestId" });
 
-		const connectionRequest = await ConnectionRequestModel.findOne({
+		const connectionRequest = await ConnectionRequest.findOne({
 			_id: requestId,
 			toUserId: loggedInUser._id,
 			status: "interested",
@@ -121,7 +120,10 @@ requestRouter.post("/view/:status/:requestId", userAuth, async (req, res) => {
 				.status(404)
 				.json({ message: "Connection request doesn't exist" });
 		connectionRequest.status = status;
-		await ConnectionRequestModel.findOneAndDelete({ _id: requestId });
+		if (status === "rejected")
+			await ConnectionRequest.findOneAndDelete({ _id: requestId });
+		else if (status === "accepted") await connectionRequest.save();
+		else res.status(400).json({ message: "Invalid request type" });
 		res.json({
 			message: `Hey ${loggedInUser.firstName}!! You ${status} the connection request`,
 		});

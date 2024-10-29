@@ -20,4 +20,23 @@ userRouter.get("/requests/recieved", userAuth, async (req, res) => {
 		res.status(400).send("Error : " + err.message);
 	}
 });
+
+userRouter.get("/connections", userAuth, async (req, res) => {
+	try {
+		const loggedInUser = req.user;
+		const connectionRequest = await ConnectionRequest.find({
+			$or: [
+				({ fromUserId: loggedInUser._id, status: "accepted" },
+				{ toUserId: loggedInUser._id, status: "accepted" }),
+			],
+		}).populate("fromUserId", ["firstName", "lastName", "photoURL"]);
+
+		res.json({
+			message: `Hey ${loggedInUser.firstName}!,You have got ${connectionRequest.length} connections`,
+			data: connectionRequest,
+		});
+	} catch (err) {
+		res.status(400).send("Error : " + err.message);
+	}
+});
 module.exports = userRouter;
