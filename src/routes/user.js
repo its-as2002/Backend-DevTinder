@@ -1,8 +1,10 @@
 const express = require("express");
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../model/connectionRequest");
+const User = require("../model/user");
 const userRouter = express.Router();
-const USER_SAFE_DATA = ["firstName", "lastName", "photoURL"];
+const USER_SAFE_DATA = ["firstName", "lastName", "photoURL", "about", "skills"];
+const mongoose = require("mongoose");
 //This api will send the pending connection request to the LoggedInUser
 userRouter.get("/requests/recieved", userAuth, async (req, res) => {
 	try {
@@ -43,6 +45,53 @@ userRouter.get("/connections", userAuth, async (req, res) => {
 		res.json({
 			message: `Hey ${loggedInUser.firstName}!,You have got ${connectionRequest.length} connections`,
 			connections,
+		});
+	} catch (err) {
+		res.status(400).send("Error : " + err.message);
+	}
+});
+
+userRouter.get("/feed", userAuth, async (req, res) => {
+	try {
+		const loggedInUser = req.user;
+		let limit = parseInt(req.query.limit) || 2;
+		if (limit < 1 || limit > 10) limit = 2;
+		const page = parseInt(req.query.page) || 1;
+		// user should not see
+		//-his own profile
+		//-his connection ,Status - accepted
+		//-people who sent connection request to user and vice-versa, Status - interested
+		//-people who are ignored, Status - ignored
+		const connectionRequest = await ConnectionRequest.find({
+			$or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
+		}).select("fromUserId toUserId");
+
+		const userNotToBeShownOnFeed = {}; // can use myMap or Set also ,just remember that logical operator need array of objectId not string of objectid.
+
+		connectionRequest.forEach((request) => {
+			userNotToBeShownOnFeed[request.fromUserId] = true;
+			userNotToBeShownOnFeed[request.toUserId] = true;
+		});
+
+		const filteredUser = await User.find({
+			$and: [
+				{
+					_id: {
+						$nin: Object.keys(userNotToBeShownOnFeed).map(
+							(id) => new mongoose.Types.ObjectId(id)
+						),
+					},
+				},
+				{ _id: { $ne: loggedInUser._id } },
+			],
+		})
+			.select(USER_SAFE_DATA)
+			.skip((page - 1) * limit)
+			.limit(limit);
+
+		res.json({
+			message: `Hey ${loggedInUser.firstName}! There are ${filteredUser.length} users on you feed`,
+			data: filteredUser,
 		});
 	} catch (err) {
 		res.status(400).send("Error : " + err.message);
