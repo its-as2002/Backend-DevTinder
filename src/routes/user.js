@@ -54,30 +54,31 @@ userRouter.get("/connections", userAuth, async (req, res) => {
 userRouter.get("/feed", userAuth, async (req, res) => {
 	try {
 		const loggedInUser = req.user;
+
+		// Validate limit to ensure it's within range
 		let limit = parseInt(req.query.limit) || 2;
-		if (limit < 1 || limit > 10) limit = 2;
+		limit = Math.min(Math.max(limit, 1), 10); // Keeps limit between 1 and 10
+
 		const page = parseInt(req.query.page) || 1;
-		// user should not see
-		//-his own profile
-		//-his connection ,Status - accepted
-		//-people who sent connection request to user and vice-versa, Status - interested
-		//-people who are ignored, Status - ignored
+
+		// Fetch connection requests involving the logged-in user
 		const connectionRequest = await ConnectionRequest.find({
 			$or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
 		}).select("fromUserId toUserId");
 
-		const userNotToBeShownOnFeed = {}; // can use myMap or Set also ,just remember that logical operator need array of objectId not string of objectid.
-
+		// Use a Set to store IDs of users to hide on the feed for optimized lookups
+		const userNotToBeShownOnFeed = new Set();
 		connectionRequest.forEach((request) => {
-			userNotToBeShownOnFeed[request.fromUserId] = true;
-			userNotToBeShownOnFeed[request.toUserId] = true;
+			userNotToBeShownOnFeed.add(request.fromUserId.toString());
+			userNotToBeShownOnFeed.add(request.toUserId.toString());
 		});
 
-		const filteredUser = await User.find({
+		// Fetch users not in userNotToBeShownOnFeed and exclude the logged-in user
+		const filteredUsers = await User.find({
 			$and: [
 				{
 					_id: {
-						$nin: Object.keys(userNotToBeShownOnFeed).map(
+						$nin: Array.from(userNotToBeShownOnFeed).map(
 							(id) => new mongoose.Types.ObjectId(id)
 						),
 					},
@@ -86,16 +87,22 @@ userRouter.get("/feed", userAuth, async (req, res) => {
 			],
 		})
 			.select(USER_SAFE_DATA)
-			.skip((page - 1) * limit)
+			.skip((page - 1) * limit) // Correct skip calculation for pagination
 			.limit(limit);
 
+		// Response with a message and filtered data
 		res.json({
-			message: `Hey ${loggedInUser.firstName}! There are ${filteredUser.length} users on you feed`,
-			data: filteredUser,
+			message: `Hey ${loggedInUser.firstName}!`,
+			page,
+			limit,
+			totalUsersShown: filteredUsers.length,
+			data: filteredUsers,
 		});
 	} catch (err) {
 		res.status(400).send("Error : " + err.message);
 	}
 });
+
+module.exports = userRouter;
 
 module.exports = userRouter;
